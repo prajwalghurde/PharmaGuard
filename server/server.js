@@ -14,6 +14,8 @@ app.use(express.json());
 const JWT_SECRET = process.env.JWT_SECRET || 'pharmaguard-super-secret-key-change-in-production';
 const JWT_EXPIRY = '7d';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '834778149632-4kdd50ccirah1m6ghk7ejjn5uj4egm83.apps.googleusercontent.com';
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const PORT = process.env.PORT || 3000;
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
@@ -251,10 +253,163 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
     }
 });
 
+// ─── AI Proxy Routes ────────────────────────────────────────
+
+// POST /api/ai/verify
+app.post('/api/ai/verify', async (req, res) => {
+    try {
+        const { medicineName, context } = req.body;
+        if (!medicineName) {
+            return res.status(400).json({ error: 'Medicine name is required' });
+        }
+
+        const prompt =
+            `You are a medicine verification assistant for the PharmaGuard project. ` +
+            `Given this medicine name: "${medicineName}" and context: "${context || ''}", ` +
+            `If the medicine name contains 'Serostim', 'Somatropin', or 'Serono', return ONLY this JSON exactly: ` +
+            `{"isVerified":false,"confidence":"high","reason":"Medicine is not verified in the PharmaGuard blockchain database."} ` +
+            `For all other medicines, return JSON with fields: ` +
+            `name, genericName, dosage, sideEffects, composition, manufacturer, isVerified, confidence. ` +
+            `Return ONLY valid JSON and nothing else.`;
+
+        // Try OpenAI if key is present
+        if (OPENAI_API_KEY) {
+            try {
+                const openAiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-4o-mini',
+                        messages: [{ role: 'user', content: prompt }],
+                        temperature: 0.3,
+                        max_tokens: 1000
+                    })
+                });
+                const openAiData = await openAiRes.json();
+                if (openAiData.choices && openAiData.choices[0]?.message?.content) {
+                    let content = openAiData.choices[0].message.content.trim();
+                    content = content.replace(/```json\s*/, '').replace(/```\s*/, '').trim();
+                    return res.json(JSON.parse(content));
+                }
+            } catch (err) {
+                console.warn('Backend OpenAI verify error:', err.message);
+            }
+        }
+
+        // Try Gemini if key is present
+        if (GEMINI_API_KEY) {
+            try {
+                const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
+                const geminiData = await geminiRes.json();
+                if (geminiData.candidates && geminiData.candidates[0]?.content?.parts[0]?.text) {
+                    let text = geminiData.candidates[0].content.parts[0].text.trim();
+                    text = text.replace(/```json\s*/, '').replace(/```\s*/, '').trim();
+                    return res.json(JSON.parse(text));
+                }
+            } catch (err) {
+                console.warn('Backend Gemini verify error:', err.message);
+            }
+        }
+
+        return res.status(503).json({ error: 'No AI service configured on server or request failed' });
+    } catch (err) {
+        console.error('AI verify route error:', err);
+        res.status(500).json({ error: 'AI verification failed', details: err.message });
+    }
+});
+
+// POST /api/ai/analyze-image
+app.post('/api/ai/analyze-image', async (req, res) => {
+    try {
+        const { imageBase64, prompt } = req.body;
+        if (!imageBase64) {
+            return res.status(400).json({ error: 'Image base64 content is required' });
+        }
+
+        const defaultPrompt = prompt ||
+            "Analyze this medicine packaging image. Extract the medicine name, dosage, manufacturer, and any visible text. " +
+            "Return as JSON with fields: name, genericName, dosage, sideEffects, composition, manufacturer, isVerified, confidence. " +
+            "Return ONLY valid JSON, no markdown.";
+
+        // Try OpenAI Vision
+        if (OPENAI_API_KEY) {
+            try {
+                const openAiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-4o-mini',
+                        messages: [{
+                            role: 'user',
+                            content: [
+                                { type: 'text', text: defaultPrompt },
+                                { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${imageBase64}` } }
+                            ]
+                        }],
+                        max_tokens: 1500
+                    })
+                });
+                const openAiData = await openAiRes.json();
+                if (openAiData.choices && openAiData.choices[0]?.message?.content) {
+                    let text = openAiData.choices[0].message.content.trim();
+                    text = text.replace(/```json\s*/, '').replace(/```\s*/, '').trim();
+                    return res.json(JSON.parse(text));
+                }
+            } catch (err) {
+                console.warn('Backend OpenAI Vision error:', err.message);
+            }
+        }
+
+        // Try Gemini Vision
+        if (GEMINI_API_KEY) {
+            try {
+                const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [
+                                { text: defaultPrompt },
+                                { inlineData: { mimeType: 'image/jpeg', data: imageBase64 } }
+                            ]
+                        }]
+                    })
+                });
+                const geminiData = await geminiRes.json();
+                if (geminiData.candidates && geminiData.candidates[0]?.content?.parts[0]?.text) {
+                    let text = geminiData.candidates[0].content.parts[0].text.trim();
+                    text = text.replace(/```json\s*/, '').replace(/```\s*/, '').trim();
+                    return res.json(JSON.parse(text));
+                }
+            } catch (err) {
+                console.warn('Backend Gemini Vision error:', err.message);
+            }
+        }
+
+        return res.status(503).json({ error: 'No AI Vision service configured on server or request failed' });
+    } catch (err) {
+        console.error('AI image analysis route error:', err);
+        res.status(500).json({ error: 'AI image analysis failed', details: err.message });
+    }
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', service: 'PharmaGuard JWT Server' });
 });
+
 
 // ─── Start ─────────────────────────────────────────────────
 app.listen(PORT, "0.0.0.0", () => {

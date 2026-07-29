@@ -214,12 +214,27 @@ public class MedicineDatabase {
     }
 
     /**
-     * AI-powered verification using OpenAI Vision (primary) or Gemini Vision (fallback)
+     * AI-powered verification via Node.js backend proxy with client-side fallback
      */
     public void verifyWithAI(String medicineName, String context, MedicineCallback callback) {
         new Thread(() -> {
             try {
-                // Try OpenAI first
+                // Attempt 1: Route through backend server proxy
+                try {
+                    JSONObject req = new JSONObject();
+                    req.put("medicineName", medicineName);
+                    req.put("context", context != null ? context : "");
+                    JSONObject serverResult = ApiClient.post("/api/ai/verify", req);
+                    if (serverResult != null && !serverResult.has("error")) {
+                        Medicine med = parseAIResponse(serverResult);
+                        callback.onResult(med, "backend_ai");
+                        return;
+                    }
+                } catch (Exception serverEx) {
+                    Log.w("MedicineDatabase", "Backend AI proxy unavailable, using client fallback: " + serverEx.getMessage());
+                }
+
+                // Attempt 2: Direct Client-Side OpenAI Fallback
                 String prompt =
                         "You are a medicine verification assistant for the PharmaGuard project. " +
                                 "Given this medicine name: \"" + medicineName + "\" and context: \"" + context + "\", " +
@@ -240,7 +255,7 @@ public class MedicineDatabase {
                     return;
                 }
 
-                // Fallback to Gemini
+                // Attempt 3: Direct Client-Side Gemini Fallback
                 JSONObject geminiResult = callGemini(prompt);
                 if (geminiResult != null) {
                     Medicine med = parseAIResponse(geminiResult);
@@ -248,7 +263,7 @@ public class MedicineDatabase {
                     return;
                 }
 
-                callback.onError("Both AI services failed");
+                callback.onError("Both server proxy and local AI services failed");
             } catch (Exception e) {
                 callback.onError("AI verification error: " + e.getMessage());
             }
@@ -256,7 +271,7 @@ public class MedicineDatabase {
     }
 
     /**
-     * AI-powered image analysis using OpenAI Vision (primary) or Gemini Vision (fallback)
+     * AI-powered image analysis via Node.js backend proxy with client-side fallback
      */
     public void analyzeImageWithAI(String imageBase64, MedicineCallback callback) {
         new Thread(() -> {
@@ -265,7 +280,22 @@ public class MedicineDatabase {
                         "Return as JSON with fields: name, genericName, dosage, sideEffects, composition, manufacturer, isVerified, confidence. " +
                         "Return ONLY valid JSON, no markdown.";
 
-                // Try OpenAI Vision
+                // Attempt 1: Route through backend server proxy
+                try {
+                    JSONObject req = new JSONObject();
+                    req.put("imageBase64", imageBase64);
+                    req.put("prompt", prompt);
+                    JSONObject serverResult = ApiClient.post("/api/ai/analyze-image", req);
+                    if (serverResult != null && !serverResult.has("error")) {
+                        Medicine med = parseAIResponse(serverResult);
+                        callback.onResult(med, "backend_ai_vision");
+                        return;
+                    }
+                } catch (Exception serverEx) {
+                    Log.w("MedicineDatabase", "Backend AI Vision proxy unavailable, using client fallback: " + serverEx.getMessage());
+                }
+
+                // Attempt 2: Direct Client-Side OpenAI Vision Fallback
                 JSONObject openAIResult = callOpenAIVision(imageBase64, prompt);
                 if (openAIResult != null) {
                     Medicine med = parseAIResponse(openAIResult);
@@ -273,7 +303,7 @@ public class MedicineDatabase {
                     return;
                 }
 
-                // Fallback to Gemini Vision
+                // Attempt 3: Direct Client-Side Gemini Vision Fallback
                 JSONObject geminiResult = callGeminiVision(imageBase64, prompt);
                 if (geminiResult != null) {
                     Medicine med = parseAIResponse(geminiResult);
@@ -281,12 +311,13 @@ public class MedicineDatabase {
                     return;
                 }
 
-                callback.onError("Both AI vision services failed");
+                callback.onError("Both server proxy and local AI vision services failed");
             } catch (Exception e) {
                 callback.onError("AI image analysis error: " + e.getMessage());
             }
         }).start();
     }
+
 
     private JSONObject callOpenAI(String prompt) {
         try {
