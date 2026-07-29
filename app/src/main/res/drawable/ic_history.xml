@@ -1,0 +1,94 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!--
+        Document/page body: filled white rectangle with folded top-right corner
+        Matches reference: plain document shape
+    -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="
+            M14,2
+            L4,2
+            C2.9,2 2,2.9 2,4
+            L2,20
+            C2,21.1 2.9,22 4,22
+            L14,22
+            C14,19.79 14,6 14,2
+            Z
+            M16,2
+            L16,8
+            L22,8
+            Z
+            M16,2
+            L22,8
+            L22,20
+            C22,21.1 21.1,22 20,22
+            L14,22
+            L14,2
+            Z"/>
+
+    <!--
+        Text lines on document (left-aligned, white lines visible against tinted bg)
+        These appear as cutout / contrasting lines in the reference image.
+        We draw them in the icon tint background color to appear as negative space.
+    -->
+    <path
+        android:fillColor="#FF9800"
+        android:pathData="M5,7 L13,7 L13,8.4 L5,8.4 Z"/>
+    <path
+        android:fillColor="#FF9800"
+        android:pathData="M5,10 L13,10 L13,11.4 L5,11.4 Z"/>
+    <path
+        android:fillColor="#FF9800"
+        android:pathData="M5,13 L11,13 L11,14.4 L5,14.4 Z"/>
+
+    <!--
+        Clock badge: filled white circle overlapping bottom-right of document
+    -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="
+            M16.5,14
+            C14.01,14 12,16.01 12,18.5
+            C12,20.99 14.01,23 16.5,23
+            C18.99,23 21,20.99 21,18.5
+            C21,16.01 18.99,14 16.5,14
+            Z"/>
+
+    <!-- Clock face inner circle (orange/warning color to contrast) -->
+    <path
+        android:fillColor="#FF9800"
+        android:pathData="
+            M16.5,15.5
+            C14.84,15.5 13.5,16.84 13.5,18.5
+            C13.5,20.16 14.84,21.5 16.5,21.5
+            C18.16,21.5 19.5,20.16 19.5,18.5
+            C19.5,16.84 18.16,15.5 16.5,15.5
+            Z"/>
+
+    <!-- Clock hour hand (pointing to ~12) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M16.5,16.2 L16.5,18.5 L17.2,18.5 L17.2,16.2 Z"/>
+
+    <!-- Clock minute hand (pointing to ~3) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M16.5,18.5 L18.8,18.5 L18.8,17.8 L16.5,17.8 Z"/>
+
+    <!-- Clock center dot -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="
+            M16.5,18.1
+            C16.28,18.1 16.1,18.28 16.1,18.5
+            C16.1,18.72 16.28,18.9 16.5,18.9
+            C16.72,18.9 16.9,18.72 16.9,18.5
+            C16.9,18.28 16.72,18.1 16.5,18.1
+            Z"/>
+
+</vector>

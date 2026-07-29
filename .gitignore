@@ -1,0 +1,37 @@
+# Gradle
+.gradle/
+build/
+app/build/
+
+# Android Studio
+.idea/
+*.iml
+
+# Local configuration
+local.properties
+
+# Native build
+.externalNativeBuild/
+.cxx/
+
+# Captures
+captures/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node.js dependencies
+server/node_modules/
+node_modules/
+
+# Environment files
+.env
+server/.env
+
+# Sensitive credentials
+server/serviceAccountKey.json
+app/google-services.json

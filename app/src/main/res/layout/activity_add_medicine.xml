@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add Medicine to Database"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_gravity="center"/>
+
+        <EditText android:id="@+id/etBarcode" android:layout_width="match_parent" android:layout_height="50dp" android:hint="Barcode number" style="@style/RoundedInput" android:layout_marginTop="20dp" android:inputType="number"/>
+        <EditText android:id="@+id/etName" android:layout_width="match_parent" android:layout_height="50dp" android:hint="Medicine name" style="@style/RoundedInput" android:layout_marginTop="12dp"/>
+        <EditText android:id="@+id/etGenericName" android:layout_width="match_parent" android:layout_height="50dp" android:hint="Generic name" style="@style/RoundedInput" android:layout_marginTop="12dp"/>
+        <EditText android:id="@+id/etManufacturer" android:layout_width="match_parent" android:layout_height="50dp" android:hint="Manufacturer" style="@style/RoundedInput" android:layout_marginTop="12dp"/>
+        <EditText android:id="@+id/etDosage" android:layout_width="match_parent" android:layout_height="50dp" android:hint="Dosage (e.g. 500mg, twice daily)" style="@style/RoundedInput" android:layout_marginTop="12dp"/>
+        <EditText android:id="@+id/etComposition" android:layout_width="match_parent" android:layout_height="50dp" android:hint="Composition / Active ingredients" style="@style/RoundedInput" android:layout_marginTop="12dp"/>
+        <EditText android:id="@+id/etSideEffects" android:layout_width="match_parent" android:layout_height="80dp" android:hint="Side effects" style="@style/RoundedInput" android:layout_marginTop="12dp" android:gravity="top"/>
+        <EditText android:id="@+id/etCategory" android:layout_width="match_parent" android:layout_height="50dp" android:hint="Category (e.g. Painkiller, Antibiotic)" style="@style/RoundedInput" android:layout_marginTop="12dp"/>
+        <EditText android:id="@+id/etPrice" android:layout_width="match_parent" android:layout_height="50dp" android:hint="Price" style="@style/RoundedInput" android:layout_marginTop="12dp"/>
+        <EditText android:id="@+id/etMfgDate" android:layout_width="match_parent" android:layout_height="50dp" android:hint="Manufacturing date (yyyy-MM-dd)" style="@style/RoundedInput" android:layout_marginTop="12dp"/>
+        <EditText android:id="@+id/etExpiryDate" android:layout_width="match_parent" android:layout_height="50dp" android:hint="Expiry date (yyyy-MM-dd)" style="@style/RoundedInput" android:layout_marginTop="12dp"/>
+
+        <Button
+            android:id="@+id/btnAddMedicine"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="Add Medicine"
+            style="@style/PrimaryButton"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="24dp"/>
+    </LinearLayout>
+</ScrollView>

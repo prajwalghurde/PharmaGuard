@@ -1,0 +1,74 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!--
+        Shield body: wide filled shape.
+        Matches reference: broad shield with curved bottom point.
+    -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="
+            M12,2
+            L4,5.5
+            L4,11.5
+            C4,16.25 7.5,20.69 12,22
+            C16.5,20.69 20,16.25 20,11.5
+            L20,5.5
+            Z"/>
+
+    <!--
+        Exclamation mark stem: tall rounded rectangle, centered
+        White is NOT visible on white shield — we need the card background color
+        to punch through. Since icons are tinted dynamically, we need to use
+        the tint-color as fill (the card bg) or use a group with clip.
+
+        Instead, draw the exclamation in a contrasting color that matches
+        the card background. The card background is white (#FFFFFF) and
+        the icon will be tinted red via app:tint. So the shield will become
+        red, and the exclamation should appear as a cutout (use red color
+        same as tint, or transparent via group clip).
+
+        Best approach for tinted icons: use a <group> with clip-path.
+    -->
+
+    <!-- Exclamation stem cutout (draw in same color as background to create cutout look) -->
+    <!-- We use a group clip-path to subtract the exclamation from the shield -->
+    <group>
+        <clip-path
+            android:pathData="
+                M12,2
+                L4,5.5
+                L4,11.5
+                C4,16.25 7.5,20.69 12,22
+                C16.5,20.69 20,16.25 20,11.5
+                L20,5.5
+                Z"/>
+
+        <!-- Exclamation stem: tall rounded bar -->
+        <path
+            android:fillColor="#F44336"
+            android:pathData="
+                M10.8,7
+                C10.8,6.34 11.34,5.8 12,5.8
+                C12.66,5.8 13.2,6.34 13.2,7
+                L13.2,14
+                C13.2,14.66 12.66,15.2 12,15.2
+                C11.34,15.2 10.8,14.66 10.8,14
+                Z"/>
+
+        <!-- Exclamation dot: circle at bottom -->
+        <path
+            android:fillColor="#F44336"
+            android:pathData="
+                M12,17
+                C12.83,17 13.5,17.67 13.5,18.5
+                C13.5,19.33 12.83,20 12,20
+                C11.17,20 10.5,19.33 10.5,18.5
+                C10.5,17.67 11.17,17 12,17
+                Z"/>
+    </group>
+
+</vector>
