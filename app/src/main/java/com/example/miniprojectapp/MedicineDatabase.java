@@ -39,12 +39,37 @@ public class MedicineDatabase {
         void onError(String error);
     }
 
+    private AppDatabase roomDb;
+
     public MedicineDatabase() {
         medicinesRef = FirebaseDatabase.getInstance().getReference("Medicine");
     }
 
+    public MedicineDatabase(Context context) {
+        this();
+        if (context != null) {
+            this.roomDb = AppDatabase.getInstance(context);
+        }
+    }
+
     /**
-     * Lookup medicine by barcode from local Firebase DB
+     * Save a medicine record into local Room cache
+     */
+    public void cacheMedicineLocally(Medicine medicine) {
+        if (medicine == null) return;
+        new Thread(() -> {
+            try {
+                if (roomDb != null) {
+                    roomDb.medicineDao().insertMedicine(MedicineEntity.fromMedicine(medicine));
+                }
+            } catch (Exception e) {
+                Log.w("MedicineDatabase", "Failed to cache medicine locally: " + e.getMessage());
+            }
+        }).start();
+    }
+
+    /**
+     * Lookup medicine by barcode from local Firebase DB (with Room DB offline fallback)
      */
     public void lookupByBarcode(String barcode, MedicineCallback callback) {
 
@@ -59,34 +84,45 @@ public class MedicineDatabase {
 
                     Medicine med = child.getValue(Medicine.class);
 
-                    Log.d("FIREBASE_TEST", "Node = " + child.getKey());
-
                     if (med != null) {
-
-                        Log.d("FIREBASE_TEST",
-                                "DB barcode = " + med.getBarcode());
-
                         if (barcode.trim().equals(med.getBarcode())) {
-
+                            cacheMedicineLocally(med);
                             callback.onResult(med, "local_db");
                             return;
                         }
                     }
                 }
 
-                callback.onError("Not found");
+                // Fallback to Room DB cache
+                fallbackToRoomBarcode(barcode, callback, "Not found in online database");
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-
-                callback.onError(error.getMessage());
+                fallbackToRoomBarcode(barcode, callback, error.getMessage());
             }
         });
     }
 
+    private void fallbackToRoomBarcode(String barcode, MedicineCallback callback, String defaultError) {
+        new Thread(() -> {
+            try {
+                if (roomDb != null) {
+                    MedicineEntity entity = roomDb.medicineDao().getMedicineByBarcode(barcode);
+                    if (entity != null) {
+                        callback.onResult(entity.toMedicine(), "room_offline_cache");
+                        return;
+                    }
+                }
+            } catch (Exception e) {
+                Log.w("MedicineDatabase", "Room barcode fallback error: " + e.getMessage());
+            }
+            callback.onError(defaultError);
+        }).start();
+    }
+
     /**
-     * Lookup medicine by name from local Firebase DB
+     * Lookup medicine by name from local Firebase DB (with Room DB offline fallback)
      */
     public void lookupByName(String name, MedicineCallback callback) {
         medicinesRef.orderByChild("name").equalTo(name)
@@ -97,19 +133,37 @@ public class MedicineDatabase {
                             for (DataSnapshot child : snapshot.getChildren()) {
                                 Medicine med = child.getValue(Medicine.class);
                                 if (med != null) {
+                                    cacheMedicineLocally(med);
                                     callback.onResult(med, "local_db");
                                     return;
                                 }
                             }
                         }
-                        callback.onError("Not found in local database");
+                        fallbackToRoomName(name, callback, "Not found in local database");
                     }
 
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {
-                        callback.onError("Database error: " + error.getMessage());
+                        fallbackToRoomName(name, callback, "Database error: " + error.getMessage());
                     }
                 });
+    }
+
+    private void fallbackToRoomName(String name, MedicineCallback callback, String defaultError) {
+        new Thread(() -> {
+            try {
+                if (roomDb != null) {
+                    MedicineEntity entity = roomDb.medicineDao().getMedicineByName(name);
+                    if (entity != null) {
+                        callback.onResult(entity.toMedicine(), "room_offline_cache");
+                        return;
+                    }
+                }
+            } catch (Exception e) {
+                Log.w("MedicineDatabase", "Room name fallback error: " + e.getMessage());
+            }
+            callback.onError(defaultError);
+        }).start();
     }
 
     /**

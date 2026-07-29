@@ -65,7 +65,7 @@ public class BarcodeScanActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         btnRescan = findViewById(R.id.btnRescan);
 
-        medicineDb = new MedicineDatabase();
+        medicineDb = new MedicineDatabase(this);
         sessionManager = new SessionManager(this);
         toneGen = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
         cameraExecutor = Executors.newSingleThreadExecutor();

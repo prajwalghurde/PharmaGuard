@@ -79,7 +79,7 @@ public class PhotoScanActivity extends AppCompatActivity {
         tvMedicineInfo = findViewById(R.id.tvMedicineInfo);
         resultCard = findViewById(R.id.resultCard);
 
-        medicineDb = new MedicineDatabase();
+        medicineDb = new MedicineDatabase(this);
         sessionManager = new SessionManager(this);
 
         btnCapture.setOnClickListener(v -> {
