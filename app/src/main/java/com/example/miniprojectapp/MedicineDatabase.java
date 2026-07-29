@@ -23,10 +23,9 @@ import java.util.List;
 public class MedicineDatabase {
 
     // ─── API Keys ──────────────────────────────────────────
-    // Set your API keys in local.properties or as environment variables
-    // DO NOT hardcode real keys here
-    public static final String OPENAI_API_KEY = "YOUR_OPENAI_API_KEY_HERE";
-    public static final String GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";
+    // Keys are injected securely from local.properties via Gradle BuildConfig
+    public static final String OPENAI_API_KEY = BuildConfig.OPENAI_API_KEY;
+    public static final String GEMINI_API_KEY = BuildConfig.GEMINI_API_KEY;
 
     private final DatabaseReference medicinesRef;
 
