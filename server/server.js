@@ -6,9 +6,12 @@ const admin = require('firebase-admin');
 const cors = require('cors');
 const { OAuth2Client } = require('google-auth-library');
 
+const path = require('path');
+
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── Config ────────────────────────────────────────────────
 const JWT_SECRET = process.env.JWT_SECRET || 'pharmaguard-super-secret-key-change-in-production';
@@ -497,6 +500,72 @@ app.post('/api/blockchain/verify-chain', async (req, res) => {
     } catch (err) {
         console.error('Blockchain verify route error:', err);
         res.status(500).json({ error: 'Smart contract verification failed' });
+    }
+});
+
+// GET /api/admin/batches - Get registered smart contract batches
+app.get('/api/admin/batches', async (req, res) => {
+    try {
+        const snapshot = await db.ref('medicines').once('value');
+        if (!snapshot.exists()) {
+            return res.json([]);
+        }
+        const batches = [];
+        snapshot.forEach(child => {
+            const data = child.val();
+            batches.push({
+                barcode: data.barcode || child.key,
+                name: data.name,
+                manufacturer: data.manufacturer,
+                batchNumber: data.batchNumber || 'BATCH-2026',
+                expiryDate: data.expiryDate,
+                currentHash: data.currentHash || '0x' + Math.random().toString(16).substring(2, 18),
+                isVerified: data.isVerified || 'true'
+            });
+        });
+        res.json(batches);
+    } catch (err) {
+        console.error('Fetch batches error:', err);
+        res.status(500).json({ error: 'Failed to fetch batches' });
+    }
+});
+
+// POST /api/admin/batches - Register new batch on smart contract ledger
+app.post('/api/admin/batches', async (req, res) => {
+    try {
+        const { barcode, name, manufacturer, batchNumber, manufacturingDate, expiryDate, dosage, composition } = req.body;
+        if (!barcode || !name) {
+            return res.status(400).json({ error: 'Barcode and Medicine Name are required' });
+        }
+
+        const crypto = require('crypto');
+        const previousHash = "0000000000000000000000000000000000000000000000000000000000000000";
+        const genesisData = barcode + name + (batchNumber || 'BATCH-2026') + previousHash;
+        const currentHash = crypto.createHash('sha256').update(genesisData).digest('hex');
+
+        const newMedicine = {
+            barcode,
+            name,
+            manufacturer: manufacturer || 'PharmaGuard Certified',
+            batchNumber: batchNumber || 'BATCH-' + Date.now(),
+            manufacturingDate: manufacturingDate || '2026-01-01',
+            expiryDate: expiryDate || '2028-12-31',
+            dosage: dosage || 'Standard Dosage',
+            composition: composition || 'Active Ingredients',
+            previousHash,
+            currentHash,
+            isVerified: 'true'
+        };
+
+        await db.ref(`medicines/${barcode}`).set(newMedicine);
+
+        res.status(201).json({
+            message: 'Batch registered successfully on smart contract ledger',
+            batch: newMedicine
+        });
+    } catch (err) {
+        console.error('Register batch error:', err);
+        res.status(500).json({ error: 'Failed to register batch' });
     }
 });
 

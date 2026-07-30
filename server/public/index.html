@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmaGuard — Regulatory & Smart Contract Admin Portal</title>
+    <meta name="description" content="PharmaGuard Anti-Counterfeit Medicine Verification and Supply Chain Heatmap Portal">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Leaflet Maps CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+
+    <!-- Header / Navbar -->
+    <header class="navbar">
+        <div class="brand">
+            <div class="brand-logo">🛡️</div>
+            <span class="brand-title">PharmaGuard Admin Portal</span>
+        </div>
+        <div>
+            <span class="badge badge-polygon">Polygon POS Ledger</span>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="container">
+
+        <!-- KPI Cards Grid -->
+        <section class="kpi-grid">
+            <div class="kpi-card" id="kpiTotalScans">
+                <div class="kpi-header">
+                    <span>Total Verification Lookups</span>
+                    <span>📊</span>
+                </div>
+                <div class="kpi-value" id="valTotalScans">1,248</div>
+                <div class="kpi-sub">+18% this month</div>
+            </div>
+
+            <div class="kpi-card" id="kpiCounterfeits">
+                <div class="kpi-header">
+                    <span>Counterfeit Incidents</span>
+                    <span>⚠️</span>
+                </div>
+                <div class="kpi-value" id="valCounterfeitAlerts">14</div>
+                <div class="kpi-sub danger">Location tagged</div>
+            </div>
+
+            <div class="kpi-card" id="kpiRegisteredBatches">
+                <div class="kpi-header">
+                    <span>Registered Smart Batches</span>
+                    <span>⛓️</span>
+                </div>
+                <div class="kpi-value" id="valRegisteredBatches">382</div>
+                <div class="kpi-sub">SHA-256 Genesis Signed</div>
+            </div>
+
+            <div class="kpi-card" id="kpiNetworkStatus">
+                <div class="kpi-header">
+                    <span>Ledger Network Health</span>
+                    <span>⚡</span>
+                </div>
+                <div class="kpi-value" id="valNetworkHealth">100%</div>
+                <div class="kpi-sub">Active & Synchronized</div>
+            </div>
+        </section>
+
+        <!-- Navigation Tab Buttons -->
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab('tabOverview')">📍 Heatmap & Incidents</button>
+            <button class="tab-btn" onclick="switchTab('tabRegistrar')">✍️ Smart Batch Registrar</button>
+            <button class="tab-btn" onclick="switchTab('tabAudit')">🔍 Chain of Custody Inspector</button>
+        </div>
+
+        <!-- TAB 1: Heatmap & Incident Reports -->
+        <section id="tabOverview" class="tab-panel active">
+            <div class="panel-card">
+                <h2 class="panel-title">🗺️ Geo-Tagged Counterfeit Hotspot Map</h2>
+                <div id="map"></div>
+            </div>
+
+            <div class="panel-card">
+                <h2 class="panel-title">🚨 Flagged Incident Reports Log</h2>
+                <div class="data-table-wrapper">
+                    <table class="data-table" id="incidentTable">
+                        <thead>
+                            <tr>
+                                <th>Report ID</th>
+                                <th>Medicine Name</th>
+                                <th>Barcode / GTIN</th>
+                                <th>Location</th>
+                                <th>Coordinates</th>
+                                <th>Timestamp</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="incidentTableBody">
+                            <!-- Populated dynamically via app.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: Batch Registrar -->
+        <section id="tabRegistrar" class="tab-panel">
+            <div class="panel-card">
+                <h2 class="panel-title">📝 Register New Genesis Medicine Batch</h2>
+                <form id="batchForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="regBarcode">Barcode / GTIN Code *</label>
+                            <input type="text" id="regBarcode" class="form-control" placeholder="e.g. 8901234567890" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="regName">Medicine Name *</label>
+                            <input type="text" id="regName" class="form-control" placeholder="e.g. Paracetamol 500mg" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="regManufacturer">Manufacturer Name</label>
+                            <input type="text" id="regManufacturer" class="form-control" placeholder="e.g. Pfizer / Sun Pharma">
+                        </div>
+                        <div class="form-group">
+                            <label for="regBatch">Batch Number</label>
+                            <input type="text" id="regBatch" class="form-control" placeholder="e.g. BATCH-2026-X9">
+                        </div>
+                        <div class="form-group">
+                            <label for="regMfgDate">Manufacturing Date</label>
+                            <input type="date" id="regMfgDate" class="form-control" value="2026-01-01">
+                        </div>
+                        <div class="form-group">
+                            <label for="regExpDate">Expiry Date</label>
+                            <input type="date" id="regExpDate" class="form-control" value="2028-12-31">
+                        </div>
+                    </div>
+                    <div style="margin-top: 1.5rem;">
+                        <button type="submit" class="btn-primary" id="btnRegisterSubmit">
+                            <span>⚡ Sign Genesis Block & Register Batch</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- TAB 3: Chain of Custody Explorer -->
+        <section id="tabAudit" class="tab-panel">
+            <div class="panel-card">
+                <h2 class="panel-title">🔎 Smart Contract Multi-Node Ledger Search</h2>
+                <div class="form-grid" style="margin-bottom: 1.5rem;">
+                    <div class="form-group">
+                        <label for="searchCode">Enter Barcode or Medicine Name</label>
+                        <input type="text" id="searchCode" class="form-control" placeholder="e.g. 8901234567890 or Amoxicillin">
+                    </div>
+                </div>
+                <button type="button" class="btn-primary" onclick="lookupChain()">Verify Audit Trail</button>
+
+                <div id="chainResults" style="margin-top: 2rem; display: none;">
+                    <h3>Ledger Verification: <span id="chainMedicineTitle" style="color: var(--primary-cyan);">--</span></h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Smart Contract: <span id="contractAddr" style="font-family: monospace;">--</span></p>
+
+                    <div class="timeline" id="timelineContainer">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
