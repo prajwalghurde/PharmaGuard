@@ -135,16 +135,22 @@ public class BarcodeScanActivity extends AppCompatActivity {
                         
                         final String finalBarcodeValue = barcodeValue;
 
+                        final GS1Parser.GS1Data gs1Data = GS1Parser.parse(finalBarcodeValue);
+                        final String lookupCode = (!gs1Data.gtin.isEmpty()) ? gs1Data.gtin : finalBarcodeValue;
+
                         toneGen.startTone(ToneGenerator.TONE_CDMA_PIP, 150);
 
                         runOnUiThread(() -> {
-                            tvResult.setText("Barcode: " + finalBarcodeValue);
+                            if (gs1Data.isGS1) {
+                                tvResult.setText("GS1 DataMatrix: " + lookupCode);
+                            } else {
+                                tvResult.setText("Barcode: " + finalBarcodeValue);
+                            }
                             tvInstruction.setText("Looking up medicine...");
                             progressBar.setVisibility(View.VISIBLE);
                         });
 
-
-                        verifyBarcode(finalBarcodeValue);
+                        verifyBarcode(lookupCode, gs1Data);
                     }
                 })
                 .addOnCompleteListener(task -> imageProxy.close());
@@ -166,13 +172,22 @@ public class BarcodeScanActivity extends AppCompatActivity {
         );
     }
 
-    private void verifyBarcode(String barcodeValue) {
+    private void verifyBarcode(String barcodeValue, GS1Parser.GS1Data gs1Data) {
 
         medicineDb.lookupByBarcode(barcodeValue,
                 new MedicineDatabase.MedicineCallback() {
 
                     @Override
                     public void onResult(Medicine medicine, String source) {
+
+                        if (gs1Data != null && gs1Data.isGS1) {
+                            if (!gs1Data.batchNumber.isEmpty() && (medicine.getBatchNumber() == null || medicine.getBatchNumber().isEmpty())) {
+                                medicine.setBatchNumber(gs1Data.batchNumber);
+                            }
+                            if (!gs1Data.expiryDate.isEmpty() && (medicine.getExpiryDate() == null || medicine.getExpiryDate().isEmpty())) {
+                                medicine.setExpiryDate(gs1Data.expiryDate);
+                            }
+                        }
 
                         runOnUiThread(() -> {
 
@@ -216,6 +231,11 @@ public class BarcodeScanActivity extends AppCompatActivity {
                         unknown.setBarcode(barcodeValue);
                         unknown.setName("Unknown Medicine");
                         unknown.setIsVerified("false");
+
+                        if (gs1Data != null && gs1Data.isGS1) {
+                            unknown.setBatchNumber(gs1Data.batchNumber);
+                            unknown.setExpiryDate(gs1Data.expiryDate);
+                        }
 
                         saveScanAndNavigate(
                                 barcodeValue,

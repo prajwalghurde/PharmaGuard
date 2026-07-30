@@ -405,6 +405,101 @@ app.post('/api/ai/analyze-image', async (req, res) => {
     }
 });
 
+// GET /api/reports/heatmap - Returns geo-tagged counterfeit incident report markers
+app.get('/api/reports/heatmap', async (req, res) => {
+    try {
+        const snapshot = await db.ref('reports').once('value');
+        if (!snapshot.exists()) {
+            return res.json([]);
+        }
+        const reports = [];
+        snapshot.forEach(child => {
+            const data = child.val();
+            if (data.latitude && data.longitude) {
+                reports.push({
+                    reportId: data.reportId || child.key,
+                    medicineName: data.medicineName,
+                    barcode: data.barcode,
+                    location: data.location || 'Unknown Location',
+                    latitude: data.latitude,
+                    longitude: data.longitude,
+                    timestamp: data.timestamp,
+                    status: data.status || 'pending'
+                });
+            }
+        });
+        res.json(reports);
+    } catch (err) {
+        console.error('Heatmap route error:', err);
+        res.status(500).json({ error: 'Failed to fetch heatmap data', details: err.message });
+    }
+});
+
+// POST /api/blockchain/verify-chain - Verifies supply chain multi-node audit trail
+app.post('/api/blockchain/verify-chain', async (req, res) => {
+    try {
+        const { barcode, medicineName, batchNumber } = req.body;
+        if (!barcode && !medicineName) {
+            return res.status(400).json({ error: 'Barcode or Medicine Name required' });
+        }
+
+        // Simulate Smart Contract multi-node ledger verification
+        const isVerified = !(medicineName && (medicineName.toLowerCase().includes('serostim') || medicineName.toLowerCase().includes('fake')));
+
+        const chainTimeline = [
+            {
+                step: 1,
+                node: "Manufacturer Node",
+                actor: "PharmaCorp Manufacturing Ltd.",
+                status: isVerified ? "VALID" : "FLAGGED",
+                timestamp: "2026-01-10 09:30:00",
+                hash: "0x" + Math.random().toString(16).substring(2, 18) + "a8b9",
+                details: "Batch created with cryptographic genesis stamp"
+            },
+            {
+                step: 2,
+                node: "Distributor Node",
+                actor: "Global Logistics Hub",
+                status: isVerified ? "VALID" : "FLAGGED",
+                timestamp: "2026-01-15 14:15:00",
+                hash: "0x" + Math.random().toString(16).substring(2, 18) + "c7d2",
+                details: "Cold chain telemetry verified (2°C - 8°C)"
+            },
+            {
+                step: 3,
+                node: "Pharmacy Node",
+                actor: "Central Retail Pharmacy",
+                status: isVerified ? "VALID" : "FLAGGED",
+                timestamp: "2026-01-20 11:45:00",
+                hash: "0x" + Math.random().toString(16).substring(2, 18) + "e4f1",
+                details: "Stock authenticated and registered on ledger"
+            },
+            {
+                step: 4,
+                node: "Consumer Node",
+                actor: "PharmaGuard Mobile App",
+                status: isVerified ? "VALID" : "COUNTERFEIT_ALERT",
+                timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+                hash: "0x" + Math.random().toString(16).substring(2, 18) + "f9a0",
+                details: isVerified ? "Consumer barcode verification matched on smart contract" : "Hash mismatch detected: Counterfeit packaging suspect"
+            }
+        ];
+
+        res.json({
+            barcode: barcode || 'UNKNOWN',
+            medicineName: medicineName || 'UNKNOWN',
+            batchNumber: batchNumber || 'BATCH-2026',
+            isVerified: isVerified,
+            smartContractAddress: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
+            network: "Polygon POS Mainnet",
+            chainTimeline: chainTimeline
+        });
+    } catch (err) {
+        console.error('Blockchain verify route error:', err);
+        res.status(500).json({ error: 'Smart contract verification failed' });
+    }
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', service: 'PharmaGuard JWT Server' });
