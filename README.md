@@ -97,11 +97,12 @@ PharmaGuard/
 4. Enable **Realtime Database** in test or production mode.
 
 ### 2. API Keys Configuration
-Update the placeholders in [MedicineDatabase.java](file:///d:/pharmaguardv1-master/app/src/main/java/com/example/miniprojectapp/MedicineDatabase.java):
-```java
-public static final String OPENAI_API_KEY = "YOUR_OPENAI_API_KEY_HERE";
-public static final String GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";
+Add your API keys to `local.properties` (which is gitignored) at the root of the project:
+```properties
+OPENAI_API_KEY=your_openai_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
+Keys will automatically be injected into Gradle `BuildConfig` for secure usage.
 
 ### 3. Backend Server Setup (Node.js)
 1. Navigate to the `server/` directory:
@@ -136,13 +137,6 @@ public static final String GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";
 2. Sync the project with Gradle files (`File > Sync Project with Gradle Files`).
 3. Connect an Android device or launch an emulator.
 4. Click **Run** (`Shift + F10`).
-
----
-
-## 🔐 Security Notice
-
-> [!IMPORTANT]
-> Never check credentials into version control! `google-services.json`, `serviceAccountKey.json`, and `.env` are listed in `.gitignore`. Keep your API keys private.
 
 ---
 
