@@ -159,7 +159,7 @@ public class DashboardActivity extends AppCompatActivity {
                                     ds.child("status")
                                             .getValue(String.class);
 
-                            if ("Verified".equalsIgnoreCase(status)) {
+                            if (ScanStatusUtil.isSuccessStatus(status)) {
                                 verified++;
                             }
                         }

@@ -43,10 +43,10 @@ public class ScanAdapter extends RecyclerView.Adapter<ScanAdapter.ViewHolder> {
 
         // Status color and dot
         String status = record.getStatus();
-        if ("Verified".equals(status) || "AI Verified".equals(status)) {
+        if (ScanStatusUtil.isSuccessStatus(status)) {
             holder.tvStatus.setTextColor(holder.itemView.getContext().getResources().getColor(R.color.success));
             holder.statusDot.setBackgroundResource(R.drawable.status_verified);
-        } else if ("Not Found".equals(status)) {
+        } else if (ScanStatusUtil.isDangerStatus(status)) {
             holder.tvStatus.setTextColor(holder.itemView.getContext().getResources().getColor(R.color.error));
             holder.statusDot.setBackgroundResource(R.drawable.status_danger);
         } else {

@@ -13,9 +13,7 @@ import okhttp3.Response;
 
 public class ApiClient {
 
-    // CHANGE THIS to your deployed server URL
-    // For local development with Android emulator, use 10.0.2.2 instead of localhost
-    public static final String BASE_URL = "http://10.54.210.104:3000";
+    public static final String BASE_URL = BuildConfig.API_BASE_URL;
 
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 

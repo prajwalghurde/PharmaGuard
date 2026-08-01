@@ -146,7 +146,7 @@ public class BarcodeScanActivity extends AppCompatActivity {
                             } else {
                                 tvResult.setText("Barcode: " + finalBarcodeValue);
                             }
-                            tvInstruction.setText("Looking up medicine...");
+                            tvInstruction.setText("Checking blockchain...");
                             progressBar.setVisibility(View.VISIBLE);
                         });
 
@@ -189,15 +189,6 @@ public class BarcodeScanActivity extends AppCompatActivity {
                             }
                         }
 
-                        runOnUiThread(() -> {
-
-                            progressBar.setVisibility(View.GONE);
-                            btnRescan.setVisibility(View.VISIBLE);
-
-                            tvInstruction.setText("✅ Authentic Medicine");
-
-                        });
-
                         boolean blockchainValid =
                                 verifyBlockchain(medicine);
 
@@ -205,6 +196,16 @@ public class BarcodeScanActivity extends AppCompatActivity {
                                 blockchainValid
                                         ? "Blockchain Verified"
                                         : "Tampered Record";
+
+                        runOnUiThread(() -> {
+                            progressBar.setVisibility(View.GONE);
+                            btnRescan.setVisibility(View.VISIBLE);
+                            tvInstruction.setText(
+                                    blockchainValid
+                                            ? "✅ Authentic Medicine"
+                                            : "❌ Possible Counterfeit"
+                            );
+                        });
 
                         saveScanAndNavigate(
                                 barcodeValue,

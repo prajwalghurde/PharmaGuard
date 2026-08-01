@@ -99,10 +99,11 @@ PharmaGuard/
 ### 2. API Keys Configuration
 Add your API keys to `local.properties` (which is gitignored) at the root of the project:
 ```properties
+API_BASE_URL=http://10.0.2.2:3000
 OPENAI_API_KEY=your_openai_api_key_here
 GEMINI_API_KEY=your_gemini_api_key_here
 ```
-Keys will automatically be injected into Gradle `BuildConfig` for secure usage.
+Keys and the backend base URL will automatically be injected into Gradle `BuildConfig`.
 
 ### 3. Backend Server Setup (Node.js)
 1. Navigate to the `server/` directory:

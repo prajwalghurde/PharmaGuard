@@ -21,6 +21,7 @@ android {
         if (rootProject.file('local.properties').exists()) {
             properties.load(rootProject.file('local.properties').newDataInputStream())
         }
+        buildConfigField "String", "API_BASE_URL", "\"${properties.getProperty('API_BASE_URL', 'http://10.0.2.2:3000')}\""
         buildConfigField "String", "OPENAI_API_KEY", "\"${properties.getProperty('OPENAI_API_KEY', '')}\""
         buildConfigField "String", "GEMINI_API_KEY", "\"${properties.getProperty('GEMINI_API_KEY', '')}\""
     }
@@ -92,10 +93,20 @@ dependencies {
     // Google Play Services - Location
     implementation 'com.google.android.gms:play-services-location:21.1.0'
 
-    // Testing
+    // Testing - Unit & Robolectric
     testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20231013'
+    testImplementation 'org.robolectric:robolectric:4.11.1'
+    testImplementation 'androidx.test:core:1.5.0'
+    testImplementation 'androidx.test.ext:junit:1.1.5'
+
+    // Testing - Instrumented (androidTest)
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation 'androidx.test:core:1.5.0'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation 'androidx.test:rules:1.5.0'
+    androidTestImplementation 'androidx.room:room-testing:2.6.1'
 }
 
 apply plugin: 'com.google.gms.google-services'

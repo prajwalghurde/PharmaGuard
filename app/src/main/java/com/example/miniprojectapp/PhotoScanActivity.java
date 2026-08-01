@@ -129,6 +129,13 @@ public class PhotoScanActivity extends AppCompatActivity {
     }
 
     private void extractMedicineNameWithGemini(String ocrText) {
+        if (MedicineDatabase.GEMINI_API_KEY == null || MedicineDatabase.GEMINI_API_KEY.trim().isEmpty()) {
+            runOnUiThread(() -> {
+                progressBar.setVisibility(View.GONE);
+                tvStatus.setText("Status: Gemini API key missing. Set GEMINI_API_KEY in local.properties.");
+            });
+            return;
+        }
 
         GenerativeModel gm = new GenerativeModel(
                 "gemini-2.5-flash",
@@ -217,6 +224,7 @@ public class PhotoScanActivity extends AppCompatActivity {
 
                                                 fetchMedicineData(medicineName);
                                                 showResult(medicine, detectedStatus, detectedSource);
+                                                saveScanHistory(medicine, detectedStatus, detectedSource);
                                             }
 
                                             @Override
@@ -239,6 +247,7 @@ public class PhotoScanActivity extends AppCompatActivity {
 
                                                 fetchMedicineData(medicineName);
                                                 showResult(aiMedicine, detectedStatus, detectedSource);
+                                                saveScanHistory(aiMedicine, detectedStatus, detectedSource);
 
                                             }
                                         });
@@ -265,7 +274,8 @@ public class PhotoScanActivity extends AppCompatActivity {
 
                         runOnUiThread(() -> {
                             progressBar.setVisibility(View.GONE);
-                            tvStatus.setText("Status: Gemini Error");
+                            String msg = t.getMessage() != null ? t.getMessage() : "Unknown Gemini failure";
+                            tvStatus.setText("Status: Gemini Error - " + msg);
                         });
                     }
                 },

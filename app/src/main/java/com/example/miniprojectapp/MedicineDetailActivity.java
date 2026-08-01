@@ -34,11 +34,15 @@ public class MedicineDetailActivity extends AppCompatActivity {
         // Status banner
         TextView tvStatusBanner = findViewById(R.id.tvStatusBanner);
         tvStatusBanner.setText(status);
-        if ("Verified".equals(status) || "AI Verified".equals(status)) {
+        if (ScanStatusUtil.isSuccessStatus(status)) {
             tvStatusBanner.setBackgroundResource(R.drawable.status_verified);
-        } else if ("Not Found".equals(status)) {
+        } else if (ScanStatusUtil.isDangerStatus(status)) {
             tvStatusBanner.setBackgroundResource(R.drawable.status_danger);
-            tvStatusBanner.setText("Not Found - Potential Counterfeit");
+            tvStatusBanner.setText(
+                    "Not Found".equalsIgnoreCase(status)
+                            ? "Not Found - Potential Counterfeit"
+                            : "Tampered Record - Potential Counterfeit"
+            );
         } else {
             tvStatusBanner.setBackgroundResource(R.drawable.status_warning);
         }
