@@ -1,146 +1,340 @@
-# 🛡️ PharmaGuard: AI & Blockchain-Powered Counterfeit Medicine Detection System
+# PharmaGuard
 
-PharmaGuard is a comprehensive Android application and backend authentication server designed to verify medicine authenticity, combat counterfeit pharmaceuticals, and inform consumers about drug safety.
-
-By combining **Blockchain Verification (SHA-256 Hash Chaining)**, **AI-powered Vision & OCR (OpenAI GPT-4o / Google Gemini 2.5 Flash)**, **ML Kit Barcode Scanning**, and real-time open database integration (**OpenFDA** & **Firebase Realtime Database**), PharmaGuard offers a multi-layered defense against counterfeit drugs.
+**PharmaGuard** is a full-stack counterfeit medicine detection platform combining an Android mobile app with a Node.js backend. It uses barcode/GS1 scanning, SHA-256 hash-chain verification, AI-powered medicine extraction (Gemini / OpenAI), OpenFDA enrichment, Firebase-backed scan history, counterfeit reporting with geo-tagging, and a web-based admin portal with a live heatmap and smart-contract batch management.
 
 ---
 
-## 📸 Key Features
+## Features
 
-- 🔍 **Real-Time Barcode & QR Scanner**: Uses Google ML Kit to scan barcodes/QR codes on packaging and verify medicine records against the Firebase Realtime Database.
-- ⛓️ **Blockchain-Resonant Verification**: Validates medicine batch numbers, previous block hashes, and current SHA-256 hashes (`HashUtil.sha256`) to ensure records haven't been tampered with in the supply chain.
-- 📷 **AI Photo Recognition & OCR**: Captures photos of medicine packages, extracts text via ML Kit OCR, and uses Google Gemini / OpenAI Vision models to correct OCR errors and identify medicine details.
-- 🏛️ **OpenFDA API Integration**: Automatically queries the U.S. FDA drug database for official brand names, generic names, dosages, compositions, and adverse reaction disclosures.
-- 📊 **Interactive User Dashboard**: Tracks verification stats (verified scans, total scan history, reported counterfeits) and provides quick navigation to all app functions.
-- 🚩 **Counterfeit Reporting System**: Allows users to flag suspicious medicines, submit notes, and contribute to public health awareness.
-- 🔒 **Secure JWT Backend Server**: Node.js & Express authentication server supporting email/password registration, password hashing with `bcryptjs`, and Google OAuth 2.0.
+### Android App
+- **JWT Authentication** — Email/password registration & login with secure token-based sessions
+- **Google Sign-In** — One-tap Google authentication exchanged for a server-issued JWT
+- **Barcode Scanning** — Real-time barcode scanning via CameraX + ML Kit Barcode API
+- **GS1 Data Parsing** — Extracts GTIN (`01`), batch/lot (`10`), expiry (`17`), and serial (`21`) from GS1-128 / DataMatrix barcodes
+- **SHA-256 Hash-Chain Verification** — Tamper detection by validating cryptographic hash chains against the server ledger
+- **Photo-Based Medicine Scan** — Capture medicine packaging photos, run on-device OCR (ML Kit Text Recognition), then extract structured data via Google Gemini generative AI
+- **AI-Powered Verification** — Server-side AI proxy supporting both OpenAI (GPT-4o-mini) and Google Gemini for medicine verification and image analysis
+- **OpenFDA Lookup** — Enriched medicine detail screen pulling data from the FDA drug database
+- **Scan History** — Firebase Realtime Database-backed history with local Room DB offline cache
+- **Counterfeit Reporting** — Submit counterfeit reports with GPS location tagging (latitude/longitude)
+- **Blockchain Supply-Chain Audit** — Multi-node chain-of-custody timeline (Manufacturer → Distributor → Pharmacy → Consumer)
 
----
-
-## 🛠️ Architecture & Tech Stack
-
-### Mobile App (Android)
-- **Language**: Java
-- **UI & Layouts**: Android XML Layouts, Material Design Components
-- **Camera & Vision**: CameraX, ML Kit Barcode Scanning, ML Kit Text Recognition
-- **Database & Auth**: Firebase Realtime Database, Firebase Admin SDK
-- **AI Integrations**: Google Generative AI Android SDK (`gemini-2.5-flash`), OpenAI API (`gpt-4o-mini`) via OkHttp3
-- **HTTP Client**: OkHttp3, Retrofit / HttpURLConnection
-
-### Backend Server (Node.js)
-- **Runtime**: Node.js, Express.js
-- **Authentication**: JSON Web Tokens (`jsonwebtoken`), `bcryptjs`, Google Auth Library (`google-auth-library`)
-- **Database**: Firebase Admin SDK (`firebase-admin`)
+### Admin Web Portal (`server/public/`)
+- **Counterfeit Heatmap** — Leaflet.js geo-tagged map of reported counterfeit incidents
+- **Incident Reports Table** — Tabular log of all flagged reports with status tracking
+- **Smart Batch Registrar** — Register new medicine batches with SHA-256 genesis block signing
+- **Chain of Custody Inspector** — Look up and verify the multi-node audit trail for any barcode or medicine
 
 ---
 
-## 📁 Repository Structure
+## Tech Stack
 
-```
+### Android App
+| Category | Technology |
+|---|---|
+| Language | Java 17 |
+| UI | Android XML layouts, Material Design Components |
+| Camera | CameraX (`camera-core`, `camera2`, `lifecycle`, `view`) |
+| ML / Vision | ML Kit Barcode Scanning, ML Kit Text Recognition (OCR) |
+| AI | Google Generative AI SDK (Gemini `0.9.0`) |
+| Networking | OkHttp `4.12.0` |
+| JSON | Gson `2.10.1` |
+| Images | Glide `4.16.0` |
+| Database | Room `2.6.1` (local offline cache) |
+| Backend DB | Firebase Realtime Database (BOM `32.7.0`) |
+| Auth | Google Play Services Auth `20.7.0` |
+| Location | Google Play Services Location `21.1.0` |
+| Concurrency | Guava `32.1.3-android` (ListenableFuture) |
+| Testing | JUnit 4, Robolectric `4.11.1`, Espresso, AndroidX Test |
+
+### Backend (`server/`)
+| Category | Technology |
+|---|---|
+| Runtime | Node.js 18+ |
+| Framework | Express `4.18.2` |
+| Auth | `jsonwebtoken` `9.0.2`, `bcryptjs` `2.4.3` |
+| Google Auth | `google-auth-library` `9.4.1` |
+| Database | Firebase Admin SDK `12.0.0` (Realtime Database) |
+| Config | `dotenv` `16.3.1` |
+| CORS | `cors` `2.8.5` |
+| AI Proxies | OpenAI API (GPT-4o-mini), Google Gemini API (`gemini-2.0-flash`) |
+| Admin UI | Vanilla HTML/CSS/JS + Leaflet.js maps |
+
+### Build System
+| Tool | Version |
+|---|---|
+| Gradle Plugin | `7.4.2` |
+| Google Services Plugin | `4.4.0` |
+| Compile SDK | 34 |
+| Min SDK | 21 |
+| Target SDK | 34 |
+| JDK | 17 |
+
+---
+
+## Repository Structure
+
+```text
 PharmaGuard/
-├── app/                              # Android Application Module
-│   ├── src/main/java/com/example/miniprojectapp/
-│   │   ├── AddMedicineActivity.java   # Add new medicine records to database
-│   │   ├── ApiClient.java             # Shared OkHttp client wrapper
-│   │   ├── AuthManager.java           # Authentication helper functions
-│   │   ├── BarcodeScanActivity.java   # CameraX + ML Kit Barcode scanning & blockchain verification
-│   │   ├── DashboardActivity.java     # User dashboard and activity counters
-│   │   ├── HashUtil.java              # SHA-256 cryptographic hashing utility
-│   │   ├── HistoryRecord.java         # Data model for user scan history
-│   │   ├── MainActivity.java          # Login activity
-│   │   ├── Medicine.java              # Core Medicine data model & hash properties
-│   │   ├── MedicineDatabase.java      # Firebase DB, OpenFDA API & AI integration handler
-│   │   ├── MedicineDetailActivity.java# Detailed view of scanned medicine
-│   │   ├── PhotoScanActivity.java     # Camera photo capture + OCR + Gemini AI analysis
-│   │   ├── ReportCounterfeitActivity.java # Submit counterfeit medicine alerts
-│   │   ├── ScanAdapter.java           # RecyclerView adapter for scan history
-│   │   ├── ScanHistoryActivity.java   # User scan history listing
-│   │   ├── SessionManager.java        # SharedPreferences session manager
-│   │   ├── SignUp.java                # Registration activity
-│   │   ├── SplashScreen.java          # App launch splash screen
-│   │   └── Users.java                 # User data model
-│   └── src/main/res/                  # Layouts, drawables, menus, and themes
+├── app/                                          # Android application module
+│   ├── build.gradle                              # App-level Gradle config & dependencies
+│   ├── google-services.json                      # Firebase config (git-ignored)
+│   ├── proguard-rules.pro                        # ProGuard / R8 rules
+│   └── src/
+│       ├── main/
+│       │   ├── AndroidManifest.xml               # Permissions, activities, app config
+│       │   ├── java/com/example/miniprojectapp/
+│       │   │   ├── SplashScreen.java             # Launch splash screen
+│       │   │   ├── MainActivity.java             # Login screen (email + Google Sign-In)
+│       │   │   ├── SignUp.java                   # Registration screen
+│       │   │   ├── DashboardActivity.java        # Main dashboard with scan options
+│       │   │   ├── BarcodeScanActivity.java      # CameraX barcode scanner + GS1 parsing
+│       │   │   ├── PhotoScanActivity.java        # Photo capture → OCR → Gemini extraction
+│       │   │   ├── MedicineDetailActivity.java   # Medicine info + verification result
+│       │   │   ├── ScanHistoryActivity.java      # List of past scans
+│       │   │   ├── AddMedicineActivity.java      # Admin: register medicine batch
+│       │   │   ├── ReportCounterfeitActivity.java# Report counterfeit with GPS location
+│       │   │   ├── GS1Parser.java                # GS1 Application Identifier parser
+│       │   │   ├── HashUtil.java                 # SHA-256 hashing utility
+│       │   │   ├── MedicineDatabase.java         # OpenFDA lookup + verification logic
+│       │   │   ├── ApiClient.java                # OkHttp REST client wrapper
+│       │   │   ├── AuthManager.java              # JWT auth + Google Sign-In manager
+│       │   │   ├── SessionManager.java           # SharedPreferences session storage
+│       │   │   ├── Medicine.java                 # Medicine data model
+│       │   │   ├── MedicineEntity.java           # Room entity for offline cache
+│       │   │   ├── MedicineDao.java              # Room DAO interface
+│       │   │   ├── AppDatabase.java              # Room database singleton
+│       │   │   ├── HistoryRecord.java            # Scan history data model
+│       │   │   ├── ScanAdapter.java              # RecyclerView adapter for history
+│       │   │   ├── ScanStatusUtil.java           # Scan status helper
+│       │   │   └── Users.java                    # User data model
+│       │   └── res/
+│       │       ├── layout/                       # 11 XML layouts (activities + list items)
+│       │       ├── drawable/                     # Icons, backgrounds, shapes
+│       │       ├── menu/                         # Dashboard options menu
+│       │       ├── values/                       # Colors, strings, themes, styles
+│       │       ├── values-night/                 # Dark theme overrides
+│       │       ├── color/                        # Color state lists
+│       │       └── mipmap-*/                     # Launcher icons (all densities)
+│       ├── test/                                 # JVM unit tests (JUnit + Robolectric)
+│       └── androidTest/                          # Instrumented tests (Espresso)
 │
-├── server/                            # Node.js JWT Authentication Server
-│   ├── .env.example                   # Environment variable template
-│   ├── package.json                   # Server dependencies
-│   └── server.js                      # Express server routes & Firebase Admin setup
+├── server/                                       # Node.js backend
+│   ├── server.js                                 # Express app — all API routes
+│   ├── package.json                              # NPM dependencies & scripts
+│   ├── .env.example                              # Environment variable template
+│   ├── serviceAccountKey.json                    # Firebase Admin credentials (git-ignored)
+│   └── public/                                   # Admin web portal (static files)
+│       ├── index.html                            # Admin dashboard HTML
+│       ├── styles.css                            # Admin portal styles
+│       └── app.js                                # Admin portal client-side logic
 │
-├── build.gradle                       # Top-level build configuration
-├── settings.gradle                    # Gradle settings
-└── README.md                          # Project documentation
+├── build.gradle                                  # Root Gradle config
+├── settings.gradle                               # Gradle project settings
+├── gradle.properties                             # JVM args, AndroidX flags, JDK path
+├── gradlew / gradlew.bat                         # Gradle wrapper scripts
+├── local.properties                              # Local SDK path & API keys (git-ignored)
+├── .gitignore                                    # Git ignore rules
+└── README.md                                     # This file
 ```
 
 ---
 
-## 🚀 Getting Started
+## Prerequisites
 
-### Prerequisites
-
-- **Android Studio** (Jellyfish / Koala or newer recommended)
-- **JDK 17** or higher
-- **Android Device / Emulator** with API Level 24+ (Android 7.0+)
-- **Node.js** v18+ (for running the authentication backend server)
+- **Android Studio** (Arctic Fox or newer) with JDK 17
+- **Android device or emulator** (minSdk 21 / Android 5.0+)
+- **Node.js** 18+ and npm
+- **Firebase project** with Realtime Database enabled
+- Google Cloud project with **Generative AI API** enabled (for Gemini features)
 
 ---
 
-## 🔧 Setup & Configuration
+## Setup
 
-### 1. Firebase Setup (Android App)
-1. Go to the [Firebase Console](https://console.firebase.google.com/) and create a new project.
-2. Register an Android App with package name `com.example.miniprojectapp`.
-3. Download `google-services.json` and place it into the `app/` folder:
-   ```
-   app/google-services.json
-   ```
-4. Enable **Realtime Database** in test or production mode.
+### 1. Firebase Configuration (Android)
 
-### 2. API Keys Configuration
-Add your API keys to `local.properties` (which is gitignored) at the root of the project:
+1. Create a Firebase project at [console.firebase.google.com](https://console.firebase.google.com).
+2. Register an Android app with package name: `com.example.miniprojectapp`.
+3. Download `google-services.json` and place it in `app/google-services.json`.
+4. Enable **Realtime Database** in the Firebase console.
+
+### 2. Android Local Configuration
+
+Edit the root `local.properties` file:
+
 ```properties
+# Backend URL injected into BuildConfig.API_BASE_URL
+# For emulator:
 API_BASE_URL=http://10.0.2.2:3000
-OPENAI_API_KEY=your_openai_api_key_here
-GEMINI_API_KEY=your_gemini_api_key_here
-```
-Keys and the backend base URL will automatically be injected into Gradle `BuildConfig`.
+# For physical USB device (with adb reverse):
+# API_BASE_URL=http://localhost:3000
 
-### 3. Backend Server Setup (Node.js)
-1. Navigate to the `server/` directory:
+# AI API keys (used client-side for Gemini photo scan)
+OPENAI_API_KEY=your_openai_api_key
+GEMINI_API_KEY=your_valid_gemini_api_key
+```
+
+> **Note:** `GEMINI_API_KEY` must be a valid key for `generativelanguage.googleapis.com`. An invalid key will cause "Gemini Error" during photo scan.
+
+### 3. Backend Configuration
+
+Navigate to the `server/` directory:
+
+1. **Install dependencies:**
    ```bash
    cd server
-   ```
-2. Install dependencies:
-   ```bash
    npm install
    ```
-3. Generate a Firebase Service Account Key from Firebase Console (`Project Settings > Service accounts`), download the JSON file, and save it as:
-   ```
-   server/serviceAccountKey.json
-   ```
-4. Create a `.env` file based on `.env.example`:
+
+2. **Add Firebase Admin credentials:**
+   - Place your Firebase Admin SDK service account JSON file as `server/serviceAccountKey.json`.
+   - Alternatively, set the `FIREBASE_SERVICE_ACCOUNT` environment variable to the JSON string.
+
+3. **Create `.env`** (copy from `.env.example`):
    ```env
    PORT=3000
-   JWT_SECRET=your-custom-jwt-secret-key
-   GOOGLE_CLIENT_ID=your-google-client-id
-   FIREBASE_DATABASE_URL=https://your-firebase-db.firebaseio.com
+   JWT_SECRET=replace-with-a-strong-random-secret
+   GOOGLE_CLIENT_ID=your-google-oauth-client-id
+   FIREBASE_DATABASE_URL=https://your-project-id-default-rtdb.firebaseio.com
+
+   # Optional: server-side AI proxy keys
+   OPENAI_API_KEY=
+   GEMINI_API_KEY=
    ```
-5. Start the server:
+
+4. **Start the server:**
    ```bash
    npm start
    ```
 
----
-
-## 📲 Building & Running the App
-
-1. Open the project directory in **Android Studio**.
-2. Sync the project with Gradle files (`File > Sync Project with Gradle Files`).
-3. Connect an Android device or launch an emulator.
-4. Click **Run** (`Shift + F10`).
+5. **Health check:**
+   ```
+   GET http://localhost:3000/api/health
+   → { "status": "ok", "service": "PharmaGuard JWT Server" }
+   ```
 
 ---
 
-## 📜 License
+## Running the App
 
-This project is created for educational and research purposes as part of an anti-counterfeit pharmaceutical verification initiative.
+### Android Studio
+
+1. Open the project root in Android Studio.
+2. Sync Gradle.
+3. Run the `app` module on an emulator or connected device.
+
+### Physical Device via USB
+
+If the backend runs on your development machine:
+
+```bash
+adb reverse tcp:3000 tcp:3000
+```
+
+Then set `API_BASE_URL=http://localhost:3000` in `local.properties`, rebuild, and reinstall.
+
+### Admin Web Portal
+
+Once the server is running, open in a browser:
+
+```
+http://localhost:3000
+```
+
+The admin portal provides the heatmap, batch registrar, and chain-of-custody inspector.
+
+---
+
+## Backend API Reference
+
+### Authentication
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/auth/register` | Register a new user (email, password, name, phone) |
+| `POST` | `/api/auth/login` | Login with email & password, returns JWT |
+| `POST` | `/api/auth/google` | Exchange Google ID token for a JWT |
+| `GET` | `/api/auth/me` | Get authenticated user profile (requires Bearer token) |
+
+### AI Proxy
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/ai/verify` | AI-powered medicine name verification (OpenAI / Gemini) |
+| `POST` | `/api/ai/analyze-image` | AI vision analysis of medicine packaging image (base64) |
+
+### Blockchain & Supply Chain
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/blockchain/verify-chain` | Verify multi-node supply chain audit trail |
+| `GET` | `/api/admin/batches` | List all registered medicine batches |
+| `POST` | `/api/admin/batches` | Register a new medicine batch with SHA-256 genesis hash |
+
+### Reporting
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/reports/heatmap` | Get geo-tagged counterfeit incident report data |
+
+### System
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/health` | Server health check |
+
+---
+
+## App Screens
+
+| Screen | Activity | Description |
+|--------|----------|-------------|
+| Splash | `SplashScreen` | Animated launch screen |
+| Login | `MainActivity` | Email/password login + Google Sign-In |
+| Sign Up | `SignUp` | New user registration |
+| Dashboard | `DashboardActivity` | Main hub — scan, history, report options |
+| Barcode Scan | `BarcodeScanActivity` | CameraX live barcode scanner with GS1 parsing |
+| Photo Scan | `PhotoScanActivity` | Camera capture → OCR → Gemini AI extraction |
+| Medicine Detail | `MedicineDetailActivity` | Full medicine info + verification status |
+| Scan History | `ScanHistoryActivity` | RecyclerView list of past scans |
+| Add Medicine | `AddMedicineActivity` | Admin batch registration form |
+| Report Counterfeit | `ReportCounterfeitActivity` | Submit counterfeit report with GPS coordinates |
+
+---
+
+## Testing
+
+### Unit Tests (JVM)
+
+```bash
+./gradlew testDebugUnitTest
+```
+
+### Instrumented Tests (Device/Emulator)
+
+```bash
+./gradlew connectedAndroidTest
+```
+
+### Build Debug APK
+
+```bash
+./gradlew assembleDebug
+```
+
+### Install on Connected Device
+
+```bash
+./gradlew installDebug
+```
+
+---
+
+## Security Notes
+
+- `android:usesCleartextTraffic="true"` is enabled in the manifest for local HTTP development. **Disable this for production.**
+- `serviceAccountKey.json`, `google-services.json`, `.env`, and `local.properties` are git-ignored. **Never commit real credentials.**
+- The default `JWT_SECRET` in code is a placeholder — **rotate all secrets before production use.**
+- The blockchain verification is a **simulation** for demonstration purposes and does not connect to an actual blockchain network.
+
+---
+
+## License
+
+Educational / research project.
